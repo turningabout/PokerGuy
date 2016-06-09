@@ -46,12 +46,15 @@ int main(){
 void Game::PlayGame(){
   int Continue=MasterGameStats.ActiveInGame.size();
   
+  //Reset all player's status to Playing Game
   for(int ply=0; ply<MasterGameStats.ActiveInGame.size(); ply++){
     MasterGameStats.ActiveInGame[ply]=1;
   }
   
+  //Reset the master set of game stats
   MasterGameStats.Init();
 
+  // Play hands until only one active player
   while(Continue>1){
     DoHand();
     
@@ -159,6 +162,66 @@ void Game::DoHand(){
   EndTheHand(); //Cleans up
 }
 
+void Game::DealCards(){
+  if(Verbose>0)
+    cerr<<"Dealing Cards"<<endl;
+
+  for(int i=0; i<MasterGameStats.NoOfPlayers; i++){
+    Hand* hand = new Hand();
+    fPlayerHands.push_back(hand);
+
+    //If the player is still in the game
+    if(!MasterGameStats.ActiveInGame[i]) continue;
+
+    if(Verbose>2)
+      cerr<<"Dealing to player "<<i+1<<endl;
+
+    //Deal a card to the master hand
+    Card* card = fDeck->DrawCard();
+    fPlayerHands[i]->AddCardToHand(card);
+    Card* cardcopy = new Card(card->GetCard());
+    fPlayers[i].fPlayerHand.AddCardToHand(cardcopy);
+
+    card = fDeck->DrawCard();
+    fPlayerHands[i]->AddCardToHand(card);
+    cardcopy = new Card(card->GetCard());
+    fPlayers[i].fPlayerHand.AddCardToHand(cardcopy);
+    
+    fPlayers[i].LocalGameStats.UpdateGameStats(&MasterGameStats,i,&fPlayers[i].fPlayerHand);
+  }
+}
+
+
+//Checks that the betting amount of valid and handles the bet
+void Game::HandleBet(int bet, int i){
+  //Handle Checking
+  if(bet==CHECK)
+    bet=(MasterGameStats.CurrentBet-MasterGameStats.Bets[i]);
+
+  if(Verbose>2)
+    cerr<<"Player "<<i+1<<" bets "<<bet<<endl;
+
+  //If they fold (any negative bet is a fold)
+  if(bet==FOLD){
+    FoldPlayer(i);
+    return; //Don't try to add to pot
+  }
+    
+  //Add dat ca$h
+  AddToPot(bet,i);
+}
+
+//Handle adding money to the pot and removing it from the player
+void Game::AddToPot(int amt, int plyr){
+  if(amt > MasterGameStats.PlayerChipCounts[plyr])
+    amt = MasterGameStats.PlayerChipCounts[plyr];
+  MasterGameStats.PlayerChipCounts[plyr]-=amt;
+  MasterGameStats.ThePot+=amt;
+  MasterGameStats.Bets[plyr]+=amt;
+  if(MasterGameStats.Bets[plyr]>MasterGameStats.CurrentBet)
+    MasterGameStats.CurrentBet=MasterGameStats.Bets[plyr];
+}
+
 void Game::DoBettingRound(){
   int NPly= MasterGameStats.NoOfPlayers;
 
@@ -228,17 +291,6 @@ void Game::DoBettingRound(){
   }
 
   MasterGameStats.CurrentBet=0;
-}
-
-//Handle adding money to the pot and removing it from the player
-void Game::AddToPot(int amt, int plyr){
-  if(amt > MasterGameStats.PlayerChipCounts[plyr])
-    amt = MasterGameStats.PlayerChipCounts[plyr];
-  MasterGameStats.PlayerChipCounts[plyr]-=amt;
-  MasterGameStats.ThePot+=amt;
-  MasterGameStats.Bets[plyr]+=amt;
-  if(MasterGameStats.Bets[plyr]>MasterGameStats.CurrentBet)
-    MasterGameStats.CurrentBet=MasterGameStats.Bets[plyr];
 }
 
 //Flop over cards for the given Game Stage
@@ -317,56 +369,6 @@ void Game::RevealCards(){
     Card *CardCopy = new Card(card->GetCard());
     MasterGameStats.TheTable.AddCardToTable(CardCopy);
   }
-}
-
-void Game::DealCards(){
-  if(Verbose>0)
-    cerr<<"Dealing Cards"<<endl;
-
-  for(int i=0; i<MasterGameStats.NoOfPlayers; i++){
-    Hand* hand = new Hand();
-    fPlayerHands.push_back(hand);
-
-    //If the player is still in the game
-    if(!MasterGameStats.ActiveInGame[i]) continue;
-
-    if(Verbose>2)
-      cerr<<"Dealing to player "<<i+1<<endl;
-
-    //Deal a card to the master hand
-    Card* card = fDeck->DrawCard();
-    fPlayerHands[i]->AddCardToHand(card);
-    Card* cardcopy = new Card(card->GetCard());
-    fPlayers[i].fPlayerHand.AddCardToHand(cardcopy);
-
-    card = fDeck->DrawCard();
-    fPlayerHands[i]->AddCardToHand(card);
-    cardcopy = new Card(card->GetCard());
-    fPlayers[i].fPlayerHand.AddCardToHand(cardcopy);
-    
-    fPlayers[i].LocalGameStats.UpdateGameStats(&MasterGameStats,i,&fPlayers[i].fPlayerHand);
-  }
-
-}
-
-//Checks that the betting amount of valid and handles the bet
-void Game::HandleBet(int bet, int i){
-  //Handle Checking
-  if(bet==CHECK)
-    bet=(MasterGameStats.CurrentBet-MasterGameStats.Bets[i]);
-
-  if(Verbose>2)
-    cerr<<"Player "<<i+1<<" bets "<<bet<<endl;
-
-  //If they fold (any negative bet is a fold)
-  if(bet==FOLD){
-    FoldPlayer(i);
-    return; //Don't try to add to pot
-  }
-    
-  //Add dat ca$h
-  AddToPot(bet,i);
-
 }
 
 void Game::FoldPlayer(int index){
@@ -448,14 +450,14 @@ double Game::ScoreHand(Hand* hand){
   for(int a=0; a<3; a++){
     for(int s=a+1; s<4; s++){
       for(int d=s+1; d<5; d++){
-	for(int f=d+1; f<6; f++){
-	  for(int g=f+1; g<7; g++){
-	    Score=ScoreHand(AllCards.fHand[a]->GetCard(),AllCards.fHand[s]->GetCard(),
-			   AllCards.fHand[d]->GetCard(),AllCards.fHand[f]->GetCard(),
-			    AllCards.fHand[g]->GetCard());
-	    if(Score>Max) Max=Score;
-	  }
-	}
+        for(int f=d+1; f<6; f++){
+          for(int g=f+1; g<7; g++){
+            Score=ScoreHand(AllCards.fHand[a]->GetCard(),AllCards.fHand[s]->GetCard(),
+            AllCards.fHand[d]->GetCard(),AllCards.fHand[f]->GetCard(),
+            AllCards.fHand[g]->GetCard());
+            if(Score>Max) Max=Score;
+          }
+        }
       }
     }
   }
@@ -595,207 +597,18 @@ void Game::ClearCards(){
 }
   
 
-///////Player stuff//////
-int Player::GetBet(){
-  int val = fBettingStrategy(LocalGameStats);
-  if(val < 1 && val != CHECK && val != FOLD)
-    return FOLD;
-  return val;
-}
-
-
-///////Game Stats stuff///////
-void GameStats::UpdateGameStats(GameStats *gs, int pos){
-  NoOfPlayers = gs->NoOfPlayers;
-  PlayerChipCounts.clear();
-  ActiveInHand.clear();
-  ActiveInGame.clear();
-  Bets.clear();
-  for(unsigned int i=0; i<gs->PlayerChipCounts.size(); i++){
-    PlayerChipCounts.push_back(gs->PlayerChipCounts[i]);
-    Bets.push_back(gs->Bets[i]);
-    ActiveInHand.push_back(gs->ActiveInHand[i]);
-    ActiveInGame.push_back(gs->ActiveInGame[i]);
-  }
-  YourPosition=pos;
-  Dealer=gs->Dealer;
-  BigBlind=gs->BigBlind;
-  LittleBlind=gs->LittleBlind;
-  GameStage=gs->GameStage;
-  HandNumber=gs->HandNumber;
-  ThePot=gs->ThePot;
-  CurrentBet=gs->CurrentBet;
-  if(gs->TheTable.GetCardsOnTable() != TheTable.GetCardsOnTable()){
-    TheTable.ClearTable();
-    for(int i=0; i<gs->TheTable.GetCardsOnTable(); i++){
-      Card *CardCopy = new Card(gs->TheTable.fTable[i]->GetCard());
-      TheTable.AddCardToTable(CardCopy);
-    }
-  }
-}
-
-void GameStats::UpdateGameStats(GameStats *gs, int pos, Hand* hand){
-  NoOfPlayers = gs->NoOfPlayers;
-  PlayerChipCounts.clear();
-  ActiveInHand.clear();
-  ActiveInGame.clear();
-  Bets.clear();
-  for(unsigned int i=0; i<gs->PlayerChipCounts.size(); i++){
-    PlayerChipCounts.push_back(gs->PlayerChipCounts[i]);
-    Bets.push_back(gs->Bets[i]);
-    ActiveInHand.push_back(gs->ActiveInHand[i]);
-    ActiveInGame.push_back(gs->ActiveInGame[i]);
-  }
-  YourPosition=pos;
-  Dealer=gs->Dealer;
-  BigBlind=gs->BigBlind;
-  LittleBlind=gs->LittleBlind;
-  GameStage=gs->GameStage;
-  HandNumber=gs->HandNumber;
-  ThePot=gs->ThePot;
-  CurrentBet=gs->CurrentBet;
-  if(gs->TheTable.GetCardsOnTable() != TheTable.GetCardsOnTable()){
-    TheTable.ClearTable();
-    for(int i=0; i<gs->TheTable.GetCardsOnTable(); i++){
-      Card *CardCopy = new Card(gs->TheTable.fTable[i]->GetCard());
-      TheTable.AddCardToTable(CardCopy);
-    }
-  }
-  
-  if(!YourHand.fHand.size()){
-    Card* copy = new Card(hand->fHand[0]->GetCard());
-    YourHand.fHand.push_back(copy);
-    copy = new Card(hand->fHand[1]->GetCard());
-    YourHand.fHand.push_back(copy);
-    }
-}
-
-void GameStats::Init(){
-  YourPosition=0;
-  for(int i=0; i<NoOfPlayers; i++){
-    PlayerChipCounts[i] = STARTINGCHIPS;
-    Bets[i]=0;
-    ActiveInHand[i]=1;
-    ActiveInGame[i]=1;
-  }
-  LittleBlind = Rand(0,NoOfPlayers-1);
-  BigBlind = (LittleBlind + 1) % (NoOfPlayers);
-  Dealer = (BigBlind + 1) % (NoOfPlayers);
-  GameStage = 0;
-  HandNumber=0;
-  TheTable.ClearTable();
-  ThePot = 0;
-  CurrentBet = 0;
-  YourHand.ClearHand();
-}
-
-void GameStats::DumpStats(){
-  cerr<<"---------------------------------"<<endl;
-  cerr<<
-    "No of players: "<<NoOfPlayers<<endl;
-  for(int i=0; i<PlayerChipCounts.size(); i++){
-    cerr<<"Player: "<<i+1<<endl;
-    cerr<<"\tChips:\t\t"<<PlayerChipCounts[i]<<endl;
-    cerr<<"\tCur Bet:\t"<<Bets[i]<<endl;
-    cerr<<"\tIn Hand:\t"<<(ActiveInHand[i] ? "yes":"no")<<endl;
-    cerr<< "\tIn Game:\t"<<(ActiveInGame[i] ? "yes":"no")<<endl;
-  }
-  cerr<<"Dealer is player: "<<Dealer+1<<endl<<
-    "Big Blind is player: "<<BigBlind+1<<endl<<
-    "Lil Blind is player: "<<LittleBlind+1<<endl<<
-    "Game stage: "<<GameStage<<endl<<
-    "Hand number: "<<HandNumber<<endl<<
-    "Current Pot: "<<ThePot<<endl<<
-    "Current Bet: "<<CurrentBet<<endl<<
-    "Cards on Table: "<<TheTable.fTable.size()<<endl;
-  cerr<<"---------------------------------"<<endl;
-}
-
-
-
-/////// Deck Stuff ///////
-void Deck::ShuffleDeck(){
-  for(unsigned int it=0; it<fDeck.size(); it++){
-    delete (fDeck[it]);
-  }
-  fDeck.clear();
-
-  //Fill a list of ordered cards
-  int org[SUITS*MAXVAL];
-  for(int suit=0; suit<SUITS; suit++){
-    for(int val=0; val<MAXVAL; val++){
-      org[val+MAXVAL*suit] = (val+2)*10+suit;  //Cards start at 2
-    }
-  }
-
-  for(int i=SUITS*MAXVAL-1; i>=0; i--){
-    int irand=Rand(0,i); //Get a random card from list
-    Card *card = new Card(org[irand]); //create new card with that value
-    fDeck.push_back(card);  //add to list
-    org[irand]=org[i];  //move the current last card down
-  }
-  if(Verbose>1)
-    cerr<<"Deck Reset\n";
-}
-
-//Gets the card pointer from the deck and removes it from the deck
-Card* Deck::DrawCard(){
-  Card* card = fDeck[fDeck.size()-1];  //get the card
-  fDeck.erase(fDeck.begin()+fDeck.size()-1); //clear the vector entry
-
-  if(!GetCardsInDeck()) cerr<<"Warning, that was the last card\n";
-
-  return card;
-}
-
-//For debugging
-void Deck::PrintDeck(){
-  cerr<<"-----\n";
-  for(int i=0;i<GetCardsInDeck(); i++){
-    fDeck[i]->PrintCard();
-  }
-  cerr<<"-----\n";
-}
-
-
-
-//////Discard Pile Stuff///////
-//Add the card to the discard pile (mostly for debugging)
-void DiscardPile::AddCardToDiscardPile(Card *card){
-  fDiscard.push_back(card);
-}
-
-//Clear all the cards and memory
-void DiscardPile::ClearDiscardPile(){
-  for(unsigned int it=0; it<fDiscard.size(); it++){
-    delete (fDiscard[it]);
-  }
-  fDiscard.clear();
-}
-
-
-
-///////Table Stuff///////
-void Table::ClearTable(){
-  for(unsigned int it=0; it<fTable.size(); it++){
-    delete (fTable[it]);
-  }
-  fTable.clear();
-}
 
 
 
 
-///////Hand Stuff///////
-void Hand::ClearHand(){
-  for(unsigned int it=0; it<fHand.size(); it++){
-    delete(fHand[it]);
-  }
-  fHand.clear();
-}
 
 
-int Rand(int a, int b){
-  if(a==b) return a;
-  return rand() % (b-a) + a;
-}
+
+
+
+
+
+
+
+
+

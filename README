@@ -1,0 +1,50 @@
+README
+
+
+This is the framework for a Texas Hold 'em poker playing AI. The spirit of this project is simply to create a poker AI with friends. I am not good at poker. Maybe you are, but even so, creating a suitable AI will probably still be a challenge. I realize that some may never even finish their AI and others will take months. There is no time limit to this. Finally, I realize that everyone will have to submit their AI on github, it is requested that you don't look at anyone else's. (If you want to know how to get started, or those of you not as native to C++, I will allow you to look at mine for that purpose.) Finally, yes I know it is possible to beat my controller. Yes, you can look through ram to find the cards, or there is probably some exploit you can find to change what is on the table. I have put a few things in place (like not giving you access to the actual cards the controller has) so that you don't accidentally make mistakes, but surely anyone with enough time can beat the system. Essentially all you need to do is write a giant function that returns what your bet is when you are given the current board position.
+
+The game system is expecting you to return an integer which will have the following result:
+<POSITIVE INTEGER> and positive integer will be subtracted from your current chip count and added to the pot. If you bet more than you have, only your currnet chip count will be added.
+<NEGATIVE INTEGER> any negetive integer will be registered as a fold, note that you can also return UtilNS::FOLD
+UtilNS::CHECK returning this will automatically bet the required amount for you to stay in the game
+
+What you are passed in is the data you would notmally have access to in a game of poker. Essentially you are given the class "GameStats" which is detailed in the PokerUtilities.h file. Things you are given:
+
+  Number of total players (even inactive)
+  Which player you are (your index in the master game list)
+  Each players' chip count
+  Each players' current bet
+  If a given player is still active in the hand
+  If a given player is still active in the game (chips > 0)
+  Who is the dealer (the index of the dealer)
+  Who is the big blind (their index)
+  Who is the little blind (their index)
+  The Gamestage
+    0 - Cards are dealt to the players, none on table
+    1 - Three cards on table
+    2 - Four cards on table
+    3 - Five cards on table
+    On top of this, each round (X) has subrounds X.# which are the amount of times the betting has gone around the table (due to raises)
+  The hand number in the game (number of hands dealt)
+  The table which is essentially just the cards on the table
+  The current pot
+  The current bet per player
+  Your hand 
+
+Further notes:
+  The numbers I have in the PokerUtitilities.h file for the big and little blinds, starting chips, etc are not really set in stone. These numbers are currently flexible
+
+Poker lingo
+Check - to bet the amount needed to stay in the hand
+Raise - to bet more than needed to stay in the hand, requiring other players still in the hand to meet your bet
+Big blind - The player two "to the left of the dealer" when there are more than three players, this person will be the third-to-last to bet in each betting round. This person also has to put in the larger of the two initial bets before the cards are even dealt
+Little blind - Same as the big blind but just "to the left" of the dealer. This person bets second to last and puts in the smaller of the two initial bets.
+Dealer - For the sake of this sim, the dealer is only a placeholder, being the person whose player-index comes cyclically next in the index list. In each betting round they are the last to bet
+
+
+
+Alan's To-Do List:
+  Put a limit on the amount of times a player can raise
+  Check for the 5th time that I am scoring hands correctly
+  ?Change the blinds as the number of players get smaller?
+  ?Require that raises are some minimum (the big blind, the current bet, etc)?
