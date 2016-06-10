@@ -1,4 +1,4 @@
-////Poker utilities#include <iostream>
+////Poker utilities
 #include <vector>
 #include <stdio.h>      /* printf, scanf, puts, NULL */
 #include <stdlib.h>     /* srand, rand */

@@ -57,5 +57,3 @@ namespace Alan{
 
   int Bot2BettingStrategy(GameStats stats);
 }
-
-
