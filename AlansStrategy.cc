@@ -1,14 +1,4 @@
-#include "Poker.h"
-#include <iomanip>
-
-
-namespace Alan{
-  bool Debug=0;
-  double HandValue(int A[], int N);
-  double CurrentBestScore(GameStats Stats);
-  void PossibleScores(GameStats Stats);
-  void OpponentsPossibleScores(Table table, int MyCard1, int MyCard2);
-}
+#include "AlansStrategy.h"
 
 
 

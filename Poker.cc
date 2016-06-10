@@ -1,4 +1,9 @@
+#ifndef POKER_H_
+#define POKER_H_
 #include "Poker.h"
+#endif
+
+#include "AlansStrategy.h"
 #include <iomanip>
 
 int main(){
@@ -9,11 +14,11 @@ int main(){
   cout<<"\nWelcome to Poker\n\n";
 
   Game* TheGame = new Game();
-  Player *Alan = new Player(&Alan::AlansBettingStrategy);
-  Player *Bot = new Player(&Alan::BotBettingStrategy);
-  Player *Bot2 = new Player(&Alan::Bot2BettingStrategy);
+  Player *Alan = new Player("Alan",&Alan::AlansBettingStrategy);
+  Player *Bot = new Player("Mr. Bot",&Alan::BotBettingStrategy);
+  Player *Bot2 = new Player("Mrs. Bot",&Alan::Bot2BettingStrategy);
   
-  TheGame->AddPlayer(Alan);
+  //TheGame->AddPlayer(Alan);
   TheGame->AddPlayer(Bot);
   TheGame->AddPlayer(Bot2);
 
@@ -74,6 +79,7 @@ void Game::PlayGame(){
 
 //Add player to the game and update the master game stats
 void Game::AddPlayer(Player* player){
+  cout<<"Adding "<<player->fPlayerName<<" to the game"<<endl;
   fPlayers.push_back(*player);
   fWins.push_back(0);
 

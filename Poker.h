@@ -5,7 +5,10 @@
 #include <time.h>       /* time */
 #include <algorithm>  //Sort
 
+#ifndef POKER_UTL_
+#define POKER_UTL_
 #include "PokerUtilities.h"
+#endif
 
 
 using namespace std;
@@ -48,14 +51,3 @@ class Game{
   Deck* fDeck;
   DiscardPile* fDiscardPile;
 };
-
-
-namespace Alan{
-  int AlansBettingStrategy(GameStats stats);
-
-  int BotBettingStrategy(GameStats stats);
-
-  int Bot2BettingStrategy(GameStats stats);
-}
-
-
