@@ -1,4 +1,4 @@
-////Poker utilities
+
 #include <vector>
 #include <stdio.h>      /* printf, scanf, puts, NULL */
 #include <stdlib.h>     /* srand, rand */
@@ -53,7 +53,7 @@ namespace UtilNS{
 
     int GetValue(){return fValue;}
     Suit GetSuit(){return fSuit;}
-    int GetCard(){return fValue*10+fSuit;}//Alan test this
+    int GetCard(){return fValue*10+fSuit;}
     void PrintCard(){cerr<<fValue<<" of "<<fSuitNames[fSuit]<<endl;}
 
    private:
@@ -151,6 +151,13 @@ namespace UtilNS{
         fBettingStrategy = Strategy;
       }
 
+      Player(const char* Name, int (*Strategy)(GameStats)){
+        fChipCount=STARTINGCHIPS;
+        fBettingStrategy = Strategy;
+        fPlayerName=Name;
+      }
+
+      const char* fPlayerName;
       int GetChipCount(){return fChipCount;}
       int GetBet();
 

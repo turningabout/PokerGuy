@@ -1,14 +1,4 @@
-#include "Poker.h"
-#include <iomanip>
-
-
-namespace Alan{
-  bool Debug=0;
-  double HandValue(int A[], int N);
-  double CurrentBestScore(GameStats Stats);
-  void PossibleScores(GameStats Stats);
-  void OpponentsPossibleScores(Table table, int MyCard1, int MyCard2);
-}
+#include "AlansStrategy.h"
 
 
 
@@ -22,13 +12,13 @@ int Alan::AlansBettingStrategy(GameStats Stats){
     if(Stats.TheTable.fTable.size()){
       cerr<<"I see "<<Stats.TheTable.fTable.size()<<" cards on the table:"<<endl;
       for(int i=0; i<Stats.TheTable.fTable.size(); i++){
-  Stats.TheTable.fTable[i]->PrintCard();
+	Stats.TheTable.fTable[i]->PrintCard();
       }
     }
     if(Stats.YourHand.fHand.size()){
       cerr<<"I have "<<Stats.YourHand.fHand.size()<<" cards:"<<endl;
       for(int i=0; i<Stats.YourHand.fHand.size(); i++){
-  Stats.YourHand.fHand[i]->PrintCard();
+	Stats.YourHand.fHand[i]->PrintCard();
       }
     }
   }
@@ -47,7 +37,7 @@ int Alan::AlansBettingStrategy(GameStats Stats){
   ///For debugging
   if(Table.size()<3 && Stats.GameStage>=1)
     cerr<<"There aren't enough cards on the table!\nGame stage is: "
-  <<Stats.GameStage<<"\nCards on table: "<<Table.size()<<endl;
+	<<Stats.GameStage<<"\nCards on table: "<<Table.size()<<endl;
   if(Hand.size()<2)
     cerr<<"I have no hand!\n"<<endl;
 
@@ -110,23 +100,23 @@ double Alan::CurrentBestScore(GameStats stats){
     double MaxScore,Score=0;
     for(int a=0; a<N; a++){
       for(int s=a+1; s<N; s++){
-  for(int d=s+1; d<N; d++){
-    for(int f=d+1; f<N; f++){
-      for(int g=f+1; g<N; g++){
-        Cards[0]=CombinedArray[a];
-        Cards[1]=CombinedArray[s];
-        Cards[2]=CombinedArray[d];
-        Cards[3]=CombinedArray[f];
-        Cards[4]=CombinedArray[g];
-        cerr<<"Trying: ";
-        for(int i=0; i<5; i++)
-    cerr<<Cards[i]<<' ';
-        Score=HandValue(Cards,5);
-        cerr<<"\t which gives: "<<setprecision(14)<<Score<<endl;
-        if(Score>MaxScore) MaxScore=Score;
-      }
-    }
-  }
+	for(int d=s+1; d<N; d++){
+	  for(int f=d+1; f<N; f++){
+	    for(int g=f+1; g<N; g++){
+	      Cards[0]=CombinedArray[a];
+	      Cards[1]=CombinedArray[s];
+	      Cards[2]=CombinedArray[d];
+	      Cards[3]=CombinedArray[f];
+	      Cards[4]=CombinedArray[g];
+	      cerr<<"Trying: ";
+	      for(int i=0; i<5; i++)
+		cerr<<Cards[i]<<' ';
+	      Score=HandValue(Cards,5);
+	      cerr<<"\t which gives: "<<setprecision(14)<<Score<<endl;
+	      if(Score>MaxScore) MaxScore=Score;
+	    }
+	  }
+	}
       }
     }
     return MaxScore;
@@ -167,9 +157,9 @@ double Alan::HandValue(int A[], int N){
     }
     if(Mult[i]==2){  //Found a pair
       if(Pair){
-  HandScore+=(Pair)*10e3;  //Two pair
-  Pair=i;
-  break;
+	HandScore+=(Pair)*10e3;  //Two pair
+	Pair=i;
+	break;
       }
       Pair=i;  //Save for possible full house
     }    
@@ -184,12 +174,12 @@ double Alan::HandValue(int A[], int N){
   if(N==5){
     for(int i=1; i<5; i++){
       if((A[i]/10)==(Str+1)){
-  Str++;
-  if(Str==5 && (A[i]/10)==13) break;  //Case of Ace->5
+	Str++;
+	if(Str==5 && (A[i]/10)==13) break;  //Case of Ace->5
       }
       else{
-  FoundStr=0;
-  break;
+	FoundStr=0;
+	break;
       }
     }
   }
@@ -202,8 +192,8 @@ double Alan::HandValue(int A[], int N){
   if(N==5){
     for(int i=1; i<5; i++){
       if((A[i]%10)!=Suit){
-  FoundFl=0;
-  break;
+	FoundFl=0;
+	break;
       }
     }
   }
@@ -215,3 +205,4 @@ double Alan::HandValue(int A[], int N){
   
   return HandScore;
 }
+
