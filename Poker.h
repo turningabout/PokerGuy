@@ -15,9 +15,9 @@ using namespace std;
 using namespace UtilNS;
 
 
-class Game{
+class Game {
  public:
-  Game(){
+  Game() {
     fMasterTable.ClearTable();
     fDeck = new Deck();
     fDiscardPile = new DiscardPile();
